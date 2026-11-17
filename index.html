@@ -329,7 +329,7 @@
     </section>
 
     <!-- Main Content Area -->
-    <main class="max-w-6xl mx-auto px-4">
+    <main class="max-w-6xl mx-auto px-4 pb-24">
         <!-- Flashcard Single View Container -->
         <div id="flashcard-view" class="block">
             <div id="flashcard-container" class="max-w-3xl mx-auto">
@@ -360,6 +360,39 @@
         </div>
     </main>
 
+    <!-- FIXED BOTTOM THUMB-FRIENDLY CONTROLS CONTAINER -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 shadow-2xl py-3 px-4">
+        <div class="max-w-4xl mx-auto flex flex-col gap-2.5">
+            
+            <!-- Row 1: Big Thumb-Friendly Audio Listen Button for Current Stanza -->
+            <div class="flex items-center justify-between gap-2">
+                <button onclick="playCurrentStanzaAudio()" id="bottom-listen-btn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-mongolRed to-rose-600 text-white font-extrabold text-base sm:text-lg shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2.5">
+                    <span class="text-2xl animate-bounce">🔊</span>
+                    <span id="bottom-listen-label">Одоогийн бадгийг сонсох (1-р бадаг)</span>
+                </button>
+                <button onclick="toggleLoopCurrent()" id="bottom-loop-btn" class="p-3.5 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 border border-slate-200 transition cursor-pointer shrink-0" title="Нэг бадгийг давтах">
+                    <span class="text-xl">🔁</span>
+                </button>
+            </div>
+
+            <!-- Row 2: 3 Memorization Modes (Bottom Thumb Navigation) -->
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setMode('read')" id="btn-mode-read" class="mode-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-2xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer bg-mongolBlue text-white shadow-md ring-2 ring-blue-300">
+                    <span class="text-base sm:text-lg">📖</span>
+                    <span class="text-center">Унших & Сонсох</span>
+                </button>
+                <button onclick="setMode('fill')" id="btn-mode-fill" class="mode-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-2xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-blue-50">
+                    <span class="text-base sm:text-lg">🧩</span>
+                    <span class="text-center">Түлхүүр үг нөхөх</span>
+                </button>
+                <button onclick="setMode('hints')" id="btn-mode-hints" class="mode-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-2xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-blue-50">
+                    <span class="text-base sm:text-lg">🧠</span>
+                    <span class="text-center">Эхний үгээр санах</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Celebration Modal (when all 19 are memorized) -->
     <div id="celebration-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border-4 border-mongolGold animate-pop relative">
@@ -385,7 +418,7 @@
     </div>
 
     <script>
-        // Complete 19 Stanzas Data with perfectly calibrated YouTube audio timestamps
+        // Complete 19 Stanzas Data with perfectly calibrated YouTube audio timestamps and vivid mnemonic imagery
         const defaultTimestamps = [
             { start: 12,  end: 39 },   // 1. Ханат цагаан гэрийн
             { start: 39,  end: 63 },   // 2. Ганган улаан тэмээний
@@ -413,7 +446,7 @@
                 id: 1,
                 theme: "Монгол гэр ба Эх нутаг",
                 letters: "Х - Х - Х - Х",
-                tip: "Ханат, Хасаг, Хан, Хатан гэсэн 'Х' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Цагаан гэрийнхээ тооно, тулга, Алтай уул, Сэлэнгэ мөрнөөр төсөөлөөрэй!",
                 color: "from-sky-500 to-blue-600",
                 bgTint: "bg-sky-50",
                 borderTint: "border-sky-200",
@@ -429,7 +462,7 @@
                 id: 2,
                 theme: "Говь нутаг ба Ан амьтад",
                 letters: "Г - Г - Г - Г",
-                tip: "Ганган, Гантай, Галбын, Гантиг гэсэн 'Г' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Говь талд яваа ганган тэмээ, хэт цахидаг өвөө, хулан, янгир ямааг төсөөл!",
                 color: "from-amber-500 to-orange-600",
                 bgTint: "bg-amber-50",
                 borderTint: "border-amber-200",
@@ -445,7 +478,7 @@
                 id: 3,
                 theme: "Монгол гоёл ба Өвөг дээдэс",
                 letters: "Х - Х - Х - Х",
-                tip: "Хүж, Хүрэн, Хүүшийн, Хүннү гэсэн 'Х' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Бүс, хөөрөг, уулын бууц болон Хүннү гүрний тамгатай үлдэгдлийг төсөөлөх!",
                 color: "from-purple-500 to-indigo-600",
                 bgTint: "bg-purple-50",
                 borderTint: "border-purple-200",
@@ -461,7 +494,7 @@
                 id: 4,
                 theme: "Дөрөө, Ээмэг ба Шинэ сар",
                 letters: "Ш - Ш - Ш - Ш",
-                tip: "Ширмэн, Шижир, Шинийн, Шимийн гэсэн 'Ш' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Ширмэн дөрөө, алтан ээмэг, шинийн сар болон нялх ногоо ургаж буйг сана!",
                 color: "from-emerald-500 to-teal-600",
                 bgTint: "bg-emerald-50",
                 borderTint: "border-emerald-200",
@@ -477,7 +510,7 @@
                 id: 5,
                 theme: "Хазаар, Шагай, Унага ба Ангир",
                 letters: "А - А - А - А",
-                tip: "Аавын, Азын, Алиахан, Ангирын гэсэн 'А' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Аавын хазаар, алаг мэлхий шагай, унага болон нуурын ангирыг төсөөлөх!",
                 color: "from-rose-500 to-red-600",
                 bgTint: "bg-rose-50",
                 borderTint: "border-rose-200",
@@ -493,7 +526,7 @@
                 id: 6,
                 theme: "Гал голомт ба Мөсөн гол",
                 letters: "И - И - И - И",
-                tip: "Индэр, Ихэр, Идэр, Илд гэсэн 'И' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Индэр улаан гал, ихэр загал, есийн хүйтэн цас болон мөсөн голыг төсөөл!",
                 color: "from-orange-500 to-red-600",
                 bgTint: "bg-orange-50",
                 borderTint: "border-orange-200",
@@ -509,7 +542,7 @@
                 id: 7,
                 theme: "Цэнхэр хадаг ба Мөнгөн сар",
                 letters: "Б - Б - Б - Б",
-                tip: "Бэлгийн, Бэхэн, Бэрийн, Бидэрт гэсэн 'Б' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Хадаг гардах, гэзэг сүлжих, бэрийн цэцэг болон сарны туяаг төсөөлөх!",
                 color: "from-blue-500 to-cyan-600",
                 bgTint: "bg-blue-50",
                 borderTint: "border-blue-200",
@@ -525,7 +558,7 @@
                 id: 8,
                 theme: "Ус, Мод, Хайр ба Манцуй",
                 letters: "У - У - У - У",
-                tip: "Урсгал, Ургамал, Уяран, Уйлан гэсэн 'У' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Урсгал ус, мох ногоорох хөрс, янагийн хайр ба нялх хүүхдийн манцуй!",
                 color: "from-teal-500 to-emerald-600",
                 bgTint: "bg-teal-50",
                 borderTint: "border-teal-200",
@@ -541,7 +574,7 @@
                 id: 9,
                 theme: "Хүлэг морь ба Өрх гэр",
                 letters: "А - А - А - А",
-                tip: "Ажнай, Аагисан, Амар, Алтан гэсэн 'А' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Хүлэг морины туурайн гал, хүдэр төмөр, ам бүлийн жаргал, алтан босго!",
                 color: "from-amber-500 to-yellow-600",
                 bgTint: "bg-amber-50",
                 borderTint: "border-amber-200",
@@ -557,7 +590,7 @@
                 id: 10,
                 theme: "Баяр найр ба Атрын тариа",
                 letters: "Б - Б - Б - Б",
-                tip: "Баяр, Баян, Балтаар, Багц гэсэн 'Б' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Найрын идээ, хангайн арц хуш, анжисны ир болон атрын тарианы мөр!",
                 color: "from-lime-500 to-green-600",
                 bgTint: "bg-lime-50",
                 borderTint: "border-lime-200",
@@ -573,7 +606,7 @@
                 id: 11,
                 theme: "Эвтэй айл ба Суварга",
                 letters: "Э - Э - Э - Э",
-                tip: "Эвт, Дархан, Дайчин, Эрдэнэ гэсэн 'Э' эсвэл үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Хилийн дээс, дайчин цэргийн тангараг, Эрдэнэ зуугийн суварга, өргөө!",
                 color: "from-indigo-500 to-blue-700",
                 bgTint: "bg-indigo-50",
                 borderTint: "border-indigo-200",
@@ -589,7 +622,7 @@
                 id: 12,
                 theme: "Үндсэн хууль ба Соёмбо",
                 letters: "Э - Э - Э - Э",
-                tip: "Эрх, Эх, Эрдэнийн гэсэн 'Э' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Үндсэн хууль, эх хэл соёл, алтан соёмбо ба эх орны шороог сана!",
                 color: "from-red-500 to-rose-700",
                 bgTint: "bg-red-50",
                 borderTint: "border-red-200",
@@ -605,7 +638,7 @@
                 id: 13,
                 theme: "Аав ээж ба Туг",
                 letters: "А - А - А - А",
-                tip: "Аав, Амин, Ардын, Амьсгалаа гэсэн 'А' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Цагаан хоймор, өлгий, цэргийн ялсан туг болон өрлөг дээдэс!",
                 color: "from-sky-500 to-indigo-600",
                 bgTint: "bg-sky-50",
                 borderTint: "border-sky-200",
@@ -621,7 +654,7 @@
                 id: 14,
                 theme: "Үйлдвэр уурхай ба Бахархал",
                 letters: "Х - Х - Х - Х",
-                tip: "Хан, Хаяа, Үлэмжийн, Халуун гэсэн үгсээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Үйлдвэрийн яндан, үлгэрийн харш, хангай говийн баялаг, бахархал!",
                 color: "from-cyan-500 to-blue-600",
                 bgTint: "bg-cyan-50",
                 borderTint: "border-cyan-200",
@@ -637,7 +670,7 @@
                 id: 15,
                 theme: "Сааль сүү ба Бэлчээр",
                 letters: "С - С - С - С",
-                tip: "Сав, Сая, Сар, Сайхан гэсэн 'С' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Саалийн зэл, сая сая мал бэлчсэн тал, нар сарны учрал, сайхан орон!",
                 color: "from-emerald-500 to-green-600",
                 bgTint: "bg-emerald-50",
                 borderTint: "border-emerald-200",
@@ -653,7 +686,7 @@
                 id: 16,
                 theme: "Өглөөний нар ба Морин хуур",
                 letters: "Ө - Ө - Ө - Ө",
-                tip: "Өглөө, Өвгийн, Өргөн, Өөрийн гэсэн 'Ө' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Өглөөний нар, морин хуурын утас, цэлмэг агаар ба эрх чөлөөт заяа!",
                 color: "from-amber-500 to-orange-500",
                 bgTint: "bg-amber-50",
                 borderTint: "border-amber-200",
@@ -669,7 +702,7 @@
                 id: 17,
                 theme: "Жанжин Сүхбаатар ба Төрийн ордон",
                 letters: "У - У - У - У",
-                tip: "Ухаа, Ухаант, Улаанбаатар, Улсаа гэсэн 'У' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Сүхбаатарын талбай, зарлан дуудсан тунхаг, нийслэл хот, төрийн ордон!",
                 color: "from-blue-600 to-indigo-700",
                 bgTint: "bg-blue-50",
                 borderTint: "border-blue-200",
@@ -685,7 +718,7 @@
                 id: 18,
                 theme: "Монгол эцэг эх ба НҮБ-ын далбаа",
                 letters: "Н - Н - Н - Н",
-                tip: "Нүүрэнд, Нүнжигэнд, Нүүдлийн, НҮБ-ын гэсэн 'Н' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Монгол эцэг эхийн хийморь, нүүдлийн холбоо болон НҮБ-ын далбаа!",
                 color: "from-red-600 to-blue-700",
                 bgTint: "bg-indigo-50",
                 borderTint: "border-indigo-200",
@@ -701,7 +734,7 @@
                 id: 19,
                 theme: "Төгсгөлийн бадаг: Иргэн бүхний гараар!",
                 letters: "Э - Э - Э - Э",
-                tip: "Эзэн, Эх орон, Эрдэнэсийн, Иргэн бүхний гэсэн 'Э' үсгээр эхэлнэ.",
+                tip: "🛠️ Сэтгэхүйн дүрслэл: Их заяагаа сүсэглэх, ирээдүй, итгэлийн сувд үгс ба иргэн бидний гар!",
                 color: "from-amber-500 via-red-500 to-blue-600",
                 bgTint: "bg-amber-50",
                 borderTint: "border-amber-300",
@@ -801,32 +834,37 @@
             renderContent();
             updateTimingEditorUI();
             updateAudioUI();
+            updateBottomListenButton();
 
             if (ytReady && ytPlayer && typeof ytPlayer.seekTo === 'function') {
-                // Ensure audio is unmuted and full volume on user click
                 if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
                 if (typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(100);
                 
                 ytPlayer.seekTo(timing.start, true);
                 ytPlayer.playVideo();
 
-                // Check after 800ms if browser autoplay policy blocked playback
                 setTimeout(() => {
                     if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
                         const st = ytPlayer.getPlayerState();
-                        // -1 = unstarted, 2 = paused, 5 = video cued
                         if (st === -1 || st === 2 || st === 5) {
                             showToast('Зүүн талын YouTube бичлэг дээр нэг удаа ▶️ дарж идэвхжүүлнэ үү!', '👆');
-                            const playerBox = document.getElementById('yt-player');
-                            if (playerBox && playerBox.parentElement) {
-                                playerBox.parentElement.classList.add('ring-4', 'ring-mongolRed');
-                                setTimeout(() => playerBox.parentElement.classList.remove('ring-4', 'ring-mongolRed'), 3000);
-                            }
                         }
                     }
                 }, 800);
             } else {
                 showToast('YouTube тоглуулагч ачаалж байна, түр хүлээнэ үү...', '⏳');
+            }
+        }
+
+        // Shortcut to play current active stanza from bottom thumb button
+        function playCurrentStanzaAudio() {
+            playStanzaAudio(state.currentIndex + 1, false);
+        }
+
+        function updateBottomListenButton() {
+            const labelEl = document.getElementById('bottom-listen-label');
+            if (labelEl) {
+                labelEl.textContent = `Одоогийн бадгийг сонсох (${state.currentIndex + 1}-р бадаг)`;
             }
         }
 
@@ -1134,6 +1172,7 @@
         function selectStanza(index) {
             state.currentIndex = index;
             updateTimingEditorUI();
+            updateBottomListenButton();
             if (state.layout === 'grid') {
                 setLayout('flashcard');
             } else {
@@ -1146,6 +1185,7 @@
             if (state.currentIndex > 0) {
                 state.currentIndex--;
                 updateTimingEditorUI();
+                updateBottomListenButton();
                 renderPills();
                 renderContent();
             }
@@ -1155,6 +1195,7 @@
             if (state.currentIndex < stanzasData.length - 1) {
                 state.currentIndex++;
                 updateTimingEditorUI();
+                updateBottomListenButton();
                 renderPills();
                 renderContent();
             }
@@ -1273,13 +1314,13 @@
                             </div>
                         </div>
 
-                        <!-- Visual SVG Illustration + Memory Tip -->
+                        <!-- Visual SVG Illustration + Vivid Mnemonic Memory Tip -->
                         <div class="p-4 ${stanza.bgTint} border-b ${stanza.borderTint}">
-                            <div class="rounded-2xl overflow-hidden shadow-inner bg-white border border-slate-200/60">
+                            <div class="rounded-2xl overflow-hidden shadow-inner bg-white border border-slate-200/60 mb-2.5">
                                 ${stanza.svg}
                             </div>
-                            <div class="mt-2.5 flex items-start gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-white/80 px-3 py-2 rounded-xl border border-slate-200/60">
-                                <span class="text-base shrink-0">🔑</span>
+                            <div class="flex items-start gap-2 text-xs sm:text-sm font-extrabold text-blue-950 bg-white/90 px-3.5 py-2.5 rounded-xl border border-blue-200 shadow-xs">
+                                <span class="text-base shrink-0 animate-bounce">💡</span>
                                 <span>${stanza.tip}</span>
                             </div>
                         </div>
