@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тусгаар Тогтнол - Хүүхдэд зориулсан цээжлэх апп</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Nunito & Comfortaa for kid-friendly Cyrillic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Comfortaa', 'cursive'],
+                    },
+                    colors: {
+                        mongolBlue: '#0066B3',
+                        mongolRed: '#DA2032',
+                        mongolGold: '#FFD900',
+                        skyLight: '#EBF5FF',
+                        creamBg: '#FFFDF7',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2.5s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FFFDF7;
+            background-image: radial-gradient(#0066B314 1.5px, transparent 1.5px), radial-gradient(#FFD90025 1.5px, #FFFDF7 1.5px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        /* Traditional Mongolian Ulzii / Pattern subtle border */
+        .mongol-border {
+            border-image: repeating-linear-gradient(45deg, #0066B3, #0066B3 10px, #FFD900 10px, #FFD900 20px, #DA2032 20px, #DA2032 30px) 10;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #93c5fd;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0066B3;
+        }
+
+        /* Hidden word pill transition */
+        .secret-word {
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .secret-word.hidden-state {
+            background: linear-gradient(135deg, #0066B3 0%, #0284c7 100%);
+            color: transparent;
+            border-bottom: 3px solid #FFD900;
+            box-shadow: 0 2px 5px rgba(0, 102, 179, 0.2);
+            cursor: pointer;
+        }
+        .secret-word.hidden-state:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        }
+        .secret-word.hidden-state::after {
+            content: "❓";
+            color: #FFD900;
+            font-size: 0.85em;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .secret-word.revealed-state {
+            background-color: #FEF08A;
+            color: #1e293b;
+            border-bottom: 3px solid #EAB308;
+            animation: pop 0.25s ease-out;
+        }
+
+        /* Confetti canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-mongolGold selection:text-slate-900 pb-16">
+
+    <!-- Confetti Canvas for Celebrations -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Decorative Banner (Soyombo Colors) -->
+    <div class="w-full h-3 bg-gradient-to-r from-mongolRed via-mongolBlue to-mongolRed relative overflow-hidden">
+        <div class="w-full h-1 bg-mongolGold absolute bottom-0 opacity-80"></div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="max-w-6xl mx-auto px-4 pt-6 pb-4">
+        <div class="bg-white rounded-3xl shadow-lg border-2 border-blue-100 p-5 md:p-7 relative overflow-hidden">
+            <!-- Decorative corner clouds/patterns -->
+            <div class="absolute -right-8 -top-8 w-36 h-36 bg-blue-50 rounded-full opacity-70 pointer-events-none"></div>
+            <div class="absolute -left-6 -bottom-6 w-28 h-28 bg-yellow-50 rounded-full opacity-80 pointer-events-none"></div>
+
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+                <!-- Title & Author -->
+                <div class="flex items-start sm:items-center gap-4">
+                    <!-- Soyombo / Flag Emblem SVG -->
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-mongolBlue to-blue-700 flex items-center justify-center shadow-md shrink-0 border-2 border-mongolGold animate-float">
+                        <svg viewBox="0 0 64 64" class="w-12 h-12">
+                            <!-- Flame -->
+                            <path d="M32 6 C29 11 33 13 32 17 C35 14 36 11 32 6 Z" fill="#FFD900"/>
+                            <path d="M27 11 C25 14 28 16 27 18 C29 16 30 14 27 11 Z" fill="#FFD900"/>
+                            <path d="M37 11 C35 14 38 16 37 18 C39 16 40 14 37 11 Z" fill="#FFD900"/>
+                            <!-- Sun & Moon -->
+                            <circle cx="32" cy="24" r="4.5" fill="#FFD900"/>
+                            <path d="M24 27 A8 8 0 0 0 40 27 A7 5 0 0 1 24 27 Z" fill="#FFD900"/>
+                            <!-- Top Triangle & Rectangle -->
+                            <polygon points="32,32 26,37 38,37" fill="#FFD900"/>
+                            <rect x="26" y="39" width="12" height="3" fill="#FFD900"/>
+                            <!-- Yin Yang -->
+                            <circle cx="32" cy="48" r="5" fill="#FFD900"/>
+                            <path d="M32 43 A2.5 2.5 0 0 1 32 48 A2.5 2.5 0 0 0 32 53 A5 5 0 0 1 32 43 Z" fill="#0066B3"/>
+                            <!-- Bottom Rectangle & Triangle -->
+                            <rect x="26" y="55" width="12" height="3" fill="#FFD900"/>
+                            <!-- Side Pillars -->
+                            <rect x="19" y="32" width="4" height="27" rx="1" fill="#FFD900"/>
+                            <rect x="41" y="32" width="4" height="27" rx="1" fill="#FFD900"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-mongolBlue text-xs sm:text-sm font-extrabold mb-1 border border-blue-200">
+                            <span>🇲🇳</span> Д.Пүрэвдорж • Бүх 19 бадаг
+                        </div>
+                        <h1 class="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                            ТУСГААР ТОГТНОЛ
+                        </h1>
+                        <p class="text-slate-600 text-sm sm:text-base font-medium mt-0.5">
+                            Зураг, толгой үсгийн түлхүүрээр амархан цээжилцгээе!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Progress Tracker Box -->
+                <div class="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-4 min-w-[270px] sm:min-w-[320px] shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-extrabold text-amber-900 flex items-center gap-1.5">
+                            <span class="text-lg">🏆</span> Миний ахиц дэвшил
+                        </span>
+                        <span id="progress-text" class="text-sm font-black bg-amber-400 text-amber-950 px-2.5 py-0.5 rounded-full">
+                            0 / 19 бадаг ⭐
+                        </span>
+                    </div>
+                    <div class="w-full h-4 bg-amber-200/70 rounded-full overflow-hidden p-0.5">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-mongolRed rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-xs text-amber-800 font-bold">
+                        <span id="encouragement-msg">Эхний бадгаа цээжилж эхэлцгээе! 🚀</span>
+                        <button onclick="resetProgress()" class="text-amber-700 hover:text-mongolRed underline ml-2 cursor-pointer" title="Ахицыг тэглэх">
+                            Шинэчлэх
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- YouTube Audio/Video Sync Player Bar -->
+    <section class="max-w-6xl mx-auto px-4 mb-6">
+        <div class="bg-white rounded-3xl shadow-lg border-2 border-red-100 p-4 sm:p-5 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row items-center gap-5">
+                <!-- Embedded YouTube Player -->
+                <div class="w-full lg:w-[320px] shrink-0">
+                    <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-md border-2 border-slate-200">
+                        <div id="yt-player"></div>
+                    </div>
+                </div>
+
+                <!-- Audio Controls & Active Stanza Status -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-red-100 text-mongolRed text-lg animate-pulse">🎧</span>
+                            <div>
+                                <h2 class="font-extrabold text-slate-900 text-base sm:text-lg leading-tight">
+                                    Шүлгийн уншлагыг дагаж сонсох
+                                </h2>
+                                <p id="player-status-text" class="text-xs sm:text-sm font-bold text-slate-500">
+                                    Эхлээд зүүн талын YouTube бичлэг дээр нэг удаа дарж эхлүүлсний дараа бадаг бүрийн "🔊 Сонсох" товч шууд ажиллана!
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Current Time Badge -->
+                        <div class="bg-slate-100 px-3.5 py-1.5 rounded-xl border border-slate-200 font-mono text-xs sm:text-sm font-extrabold text-slate-700">
+                            ⏱️ <span id="yt-current-time">00:00</span> / 07:51
+                        </div>
+                    </div>
+
+                    <!-- Global Playback Mode Buttons -->
+                    <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                        <button onclick="playAllContinuous()" id="btn-play-all" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-mongolRed to-rose-600 text-white font-extrabold text-xs sm:text-sm shadow-sm hover:brightness-110 transition cursor-pointer flex items-center gap-1.5">
+                            <span>▶️</span> Бүтнээр нь дагаж унших
+                        </button>
+
+                        <button onclick="toggleLoopCurrent()" id="btn-loop-toggle" class="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 font-extrabold text-xs sm:text-sm border border-slate-200 transition cursor-pointer flex items-center gap-1.5">
+                            <span>🔁</span> Нэг бадгийг давтах: <strong id="loop-status-label">Унтраалттай</strong>
+                        </button>
+
+                        <button onclick="stopAudio()" class="px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs sm:text-sm transition cursor-pointer flex items-center gap-1">
+                            <span>⏹️</span> Зогсоох
+                        </button>
+
+                        <button onclick="toggleTimingEditor()" id="btn-timing-toggle" class="ml-auto px-3.5 py-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 text-mongolBlue font-extrabold text-xs sm:text-sm border border-blue-200 transition cursor-pointer flex items-center gap-1.5">
+                            <span>⚙️</span> Хугацаа тааруулах
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Fine-Tune Timestamp Panel -->
+                    <div id="timing-editor-panel" class="hidden mt-1 bg-amber-50/90 border border-amber-200 rounded-2xl p-3 text-xs sm:text-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-extrabold text-amber-950">
+                                🛠️ Бадаг <span id="sync-stanza-num">1</span>-ийн хугацаа: 
+                                <span id="sync-range-display" class="font-mono bg-white px-2 py-0.5 rounded border border-amber-300">0:22 - 0:45</span>
+                            </span>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="adjustStanzaTime('start', -1)" class="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg font-extrabold cursor-pointer">Эхлэл -1с</button>
+                                <button onclick="adjustStanzaTime('start', 1)" class="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg font-extrabold cursor-pointer">Эхлэл +1с</button>
+                                <button onclick="setStartToNow()" class="px-2.5 py-1 bg-mongolBlue text-white rounded-lg font-extrabold hover:bg-blue-700 cursor-pointer">📍 Одоогийн цагаар эхлүүлэх</button>
+                                <button onclick="adjustStanzaTime('end', -1)" class="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg font-extrabold cursor-pointer">Төгсгөл -1с</button>
+                                <button onclick="adjustStanzaTime('end', 1)" class="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg font-extrabold cursor-pointer">Төгсгөл +1с</button>
+                                <button onclick="resetTimings()" class="px-2.5 py-1 text-mongolRed underline font-bold cursor-pointer">Анхны хугацаа</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Control Panel: Modes, View Toggle & Quick Tip -->
+    <section class="max-w-6xl mx-auto px-4 mb-6">
+        <div class="bg-white rounded-3xl shadow-md border border-slate-200/80 p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            
+            <!-- 3 Memorization Modes -->
+            <div class="flex flex-col sm:flex-row gap-2 flex-1">
+                <button onclick="setMode('read')" id="btn-mode-read" class="mode-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all cursor-pointer bg-mongolBlue text-white shadow-md ring-2 ring-blue-300">
+                    <span class="text-lg">📖</span>
+                    <span>1. Унших & Сонсох</span>
+                </button>
+                <button onclick="setMode('fill')" id="btn-mode-fill" class="mode-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-blue-50">
+                    <span class="text-lg">🧩</span>
+                    <span>2. Түлхүүр үг нөхөх</span>
+                </button>
+                <button onclick="setMode('hints')" id="btn-mode-hints" class="mode-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-blue-50">
+                    <span class="text-lg">🧠</span>
+                    <span>3. Эхний үгээр санах</span>
+                </button>
+            </div>
+
+            <!-- Layout View Switcher (Grid vs Flashcard) -->
+            <div class="flex items-center bg-slate-100 p-1.5 rounded-2xl shrink-0 self-center md:self-auto">
+                <button onclick="setLayout('flashcard')" id="btn-layout-flashcard" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer bg-white text-mongolBlue shadow-sm">
+                    <span>🎴</span> Нэг бүрчлэн
+                </button>
+                <button onclick="setLayout('grid')" id="btn-layout-grid" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-600 hover:text-slate-900">
+                    <span>📚</span> Бүх 19 бадаг
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Helper Banner -->
+        <div id="mode-helper" class="mt-3 bg-blue-50/90 border border-blue-200 rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-sm text-blue-900 font-bold">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">💡</span>
+                <span id="mode-helper-text">Бадаг бүрийн эхний том өнгөт үсгүүдийг ажиглаарай! Толгой холбосон үсгүүд цээжлэхэд тусална.</span>
+            </div>
+            <button id="reveal-all-btn" onclick="toggleRevealAllInCurrent()" class="hidden px-3 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-xl text-xs font-extrabold shadow-sm transition cursor-pointer">
+                👁️ Нуусан үгсийг бүгдийг харах
+            </button>
+        </div>
+    </section>
+
+    <!-- Stanza Quick Selector Pills (1 to 19) -->
+    <section class="max-w-6xl mx-auto px-4 mb-6">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-2 px-1">
+                <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Бадаг сонгох (Толгой үсгээр нь):</span>
+                <span class="text-xs font-bold text-mongolBlue">⭐ = Цээжилсэн</span>
+            </div>
+            <div id="stanza-pills" class="flex flex-wrap gap-1.5 sm:gap-2">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4">
+        <!-- Flashcard Single View Container -->
+        <div id="flashcard-view" class="block">
+            <div id="flashcard-container" class="max-w-3xl mx-auto">
+                <!-- Single card rendered here -->
+            </div>
+
+            <!-- Flashcard Navigation Controls -->
+            <div class="max-w-3xl mx-auto mt-6 flex items-center justify-between gap-3">
+                <button onclick="prevStanza()" id="prev-btn" class="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold border-2 border-slate-200 shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-40 disabled:pointer-events-none">
+                    <span>⬅️</span> Өмнөх бадаг
+                </button>
+                
+                <div class="text-center">
+                    <span id="flashcard-counter" class="font-display font-bold text-lg sm:text-xl text-mongolBlue bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
+                        1 / 19
+                    </span>
+                </div>
+
+                <button onclick="nextStanza()" id="next-btn" class="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-mongolBlue hover:bg-blue-700 text-white font-extrabold shadow-md transition active:scale-95 cursor-pointer disabled:opacity-40 disabled:pointer-events-none">
+                    Дараагийн бадаг <span>➡️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid All Stanzas View Container -->
+        <div id="grid-view" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- All 19 cards rendered here -->
+        </div>
+    </main>
+
+    <!-- Celebration Modal (when all 19 are memorized) -->
+    <div id="celebration-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border-4 border-mongolGold animate-pop relative">
+            <div class="text-6xl mb-3 animate-bounce">🏆🇲🇳🎉</div>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                БАЯР ХҮРГЭЕ!
+            </h2>
+            <p class="text-slate-600 font-semibold mb-6">
+                Чи Д.Пүрэвдоржийн "Тусгаар тогтнол" шүлгийн бүх 19 бадгийг бүрэн цээжиллээ! Чи бол жинхэнэ эх оронч хүүхэд!
+            </p>
+            <button onclick="closeCelebration()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-mongolBlue to-blue-600 text-white font-extrabold text-lg shadow-lg hover:brightness-110 transition cursor-pointer">
+                Гайхалтай! Баярлалаа 🌟
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm flex items-center gap-2.5 border border-slate-700">
+            <span id="toast-icon" class="text-lg">⭐</span>
+            <span id="toast-msg">Бадаг цээжлэгдлээ!</span>
+        </div>
+    </div>
+
+    <script>
+        // Complete 19 Stanzas Data with custom visual illustrations, line emojis, timestamps, and memory hints
+        const defaultTimestamps = [
+            { start: 22, end: 45 },   // 1
+            { start: 45, end: 68 },   // 2
+            { start: 68, end: 91 },   // 3
+            { start: 91, end: 114 },  // 4
+            { start: 114, end: 137 }, // 5
+            { start: 137, end: 160 }, // 6
+            { start: 160, end: 183 }, // 7
+            { start: 183, end: 206 }, // 8
+            { start: 206, end: 229 }, // 9
+            { start: 229, end: 252 }, // 10
+            { start: 252, end: 275 }, // 11
+            { start: 275, end: 298 }, // 12
+            { start: 298, end: 321 }, // 13
+            { start: 321, end: 344 }, // 14
+            { start: 344, end: 367 }, // 15
+            { start: 367, end: 390 }, // 16
+            { start: 390, end: 413 }, // 17
+            { start: 413, end: 438 }, // 18
+            { start: 438, end: 468 }  // 19
+        ];
+
+        const stanzasData = [
+            {
+                id: 1,
+                theme: "Монгол гэр ба Эх нутаг",
+                letters: "Х - Х - Х - Х",
+                tip: "4 мөр дөрвүүлээ 'Х' үсгээр эхэлнэ: Ханат, Хасаг, Хан, Хатан!",
+                color: "from-sky-500 to-blue-600",
+                bgTint: "bg-sky-50",
+                borderTint: "border-sky-200",
+                lines: [
+                    { emoji: "⛺", text: "Ханат цагаан гэрийн од хийморийн тоонон дээр" },
+                    { emoji: "🔥", text: "Хасаг халуун тулгын омог дөрвөн тотгон дээр" },
+                    { emoji: "🏔️", text: "Хан Алтай аавын онгон тэргүүн оргил дээр" },
+                    { emoji: "🌊", text: "Хатан Сэлэнгэ ээжийн одод орчих мандал дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#E0F2FE"/>
+                    <!-- Mountains -->
+                    <polygon points="10,90 55,25 100,90" fill="#64748B"/>
+                    <polygon points="55,25 42,44 50,41 55,46 61,40 68,44" fill="#FFFFFF"/>
+                    <polygon points="65,90 115,35 165,90" fill="#94A3B8"/>
+                    <!-- River -->
+                    <path d="M0,92 Q50,82 100,92 T200,92 L200,110 L0,110 Z" fill="#0284C7"/>
+                    <!-- Yurt -->
+                    <path d="M125,88 L125,68 Q155,52 185,68 L185,88 Z" fill="#FFFFFF" stroke="#0066B3" stroke-width="2"/>
+                    <rect x="150" y="72" width="10" height="16" fill="#DA2032" rx="1"/>
+                    <ellipse cx="155" cy="60" rx="8" ry="3" fill="#FFD900" stroke="#DA2032" stroke-width="1.5"/>
+                    <!-- Stars -->
+                    <circle cx="30" cy="20" r="2.5" fill="#F59E0B"/>
+                    <circle cx="175" cy="22" r="3" fill="#F59E0B"/>
+                </svg>`
+            },
+            {
+                id: 2,
+                theme: "Говь нутаг ба Ан амьтад",
+                letters: "Г - Г - Г - Г",
+                tip: "4 мөр дөрвүүлээ 'Г' үсгээр эхэлнэ: Ганган, Гантай, Галбын, Гантиг!",
+                color: "from-amber-500 to-orange-600",
+                bgTint: "bg-amber-50",
+                borderTint: "border-amber-200",
+                lines: [
+                    { emoji: "🐫", text: "Ганган улаан тэмээний зогдор дэвсэх тэшил дээр" },
+                    { emoji: "🪙", text: "Гантай мөнгөн хэтний зоолог тээх тээгэн дээр" },
+                    { emoji: "🏜️", text: "Галбын халуун говийн хулан ангах зэрэм дээр" },
+                    { emoji: "🐐", text: "Гантиг чулуун хясааны янгир халих элгэн дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FEF3C7"/>
+                    <circle cx="165" cy="26" r="14" fill="#F59E0B"/>
+                    <!-- Sand dunes -->
+                    <path d="M0,85 Q60,55 120,85 T200,80 L200,110 L0,110 Z" fill="#FBBF24"/>
+                    <path d="M0,95 Q80,75 200,95 L200,110 L0,110 Z" fill="#D97706"/>
+                    <!-- Stylized Camel -->
+                    <g transform="translate(45, 42)" fill="#92400E">
+                        <ellipse cx="30" cy="26" rx="16" ry="9"/>
+                        <path d="M20,20 Q23,8 27,20 Z"/>
+                        <path d="M32,20 Q36,8 40,20 Z"/>
+                        <path d="M44,24 Q52,24 53,12 L58,12 L58,16 L54,17 Q53,29 44,29 Z"/>
+                        <rect x="18" y="32" width="3" height="14"/>
+                        <rect x="24" y="32" width="3" height="14"/>
+                        <rect x="36" y="32" width="3" height="14"/>
+                        <rect x="41" y="32" width="3" height="14"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 3,
+                theme: "Монгол гоёл ба Өвөг дээдэс",
+                letters: "Х - Х - Х - Х",
+                tip: "Дахиад 'Х' үсгийн бадаг: Хүж бүс, Хүрэл хөөрөг, Хүйсийн уул, Хүннү дээдэс!",
+                color: "from-purple-500 to-indigo-600",
+                bgTint: "bg-purple-50",
+                borderTint: "border-purple-200",
+                lines: [
+                    { emoji: "🎗️", text: "Хүж дурдан бүсний ташаа дарах нугалаан дээр" },
+                    { emoji: "🏺", text: "Хүрэл манан хөөргөний даалин дарах наргиан дээр" },
+                    { emoji: "⛰️", text: "Хүйсийн сүүдэр буусан уулын гацаа бууцан дээр" },
+                    { emoji: "🏛️", text: "Хүннү дээдсийн тамгалсан улбаа гархин буурин дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#F3E8FF"/>
+                    <!-- Snuff Bottle (Хөөрөг) -->
+                    <rect x="52" y="38" width="32" height="44" rx="12" fill="#A855F7" stroke="#581C87" stroke-width="2"/>
+                    <rect x="62" y="28" width="12" height="10" rx="3" fill="#DA2032"/>
+                    <circle cx="68" cy="25" r="4" fill="#FFD900"/>
+                    <!-- Hunnu Sun & Moon Symbol -->
+                    <circle cx="135" cy="58" r="14" fill="#F59E0B"/>
+                    <path d="M117,64 A19,19 0 0,0 153,64 A16,11 0 0,1 117,64 Z" fill="#6D28D9"/>
+                </svg>`
+            },
+            {
+                id: 4,
+                theme: "Дөрөө, Ээмэг ба Шинэ сар",
+                letters: "Ш - Ш - Ш - Ш",
+                tip: "4 мөр дөрвүүлээ 'Ш' үсгээр эхэлнэ: Ширмэн, Шижир, Шинийн, Шинэ!",
+                color: "from-emerald-500 to-teal-600",
+                bgTint: "bg-emerald-50",
+                borderTint: "border-emerald-200",
+                lines: [
+                    { emoji: "🧲", text: "Ширмэн төмөр дөрөөний шивээ зурах тавган дээр" },
+                    { emoji: "💍", text: "Шижир алтан ээмэгний шигтгээ чимэх гархин дээр" },
+                    { emoji: "🌙", text: "Шинийн хоёрны саран хаяарч шингэх тэнгэр дээр" },
+                    { emoji: "🌱", text: "Шинэ нялх ногоо ханшиж задрах газар дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#ECFDF5"/>
+                    <!-- Crescent Moon -->
+                    <path d="M55,22 A22,22 0 1,0 78,52 A17,17 0 1,1 55,22 Z" fill="#FBBF24"/>
+                    <!-- Golden Earring -->
+                    <circle cx="135" cy="48" r="15" fill="none" stroke="#EAB308" stroke-width="4"/>
+                    <circle cx="135" cy="63" r="5" fill="#DA2032"/>
+                    <!-- Fresh Grass -->
+                    <path d="M20,95 Q25,75 30,95 M35,95 Q42,70 48,95 M150,95 Q156,72 162,95 M168,95 Q174,76 180,95" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 5,
+                theme: "Хазаар, Шагай, Унага ба Ангир",
+                letters: "А - А - А - А",
+                tip: "4 мөр дөрвүүлээ 'А' үсгээр эхэлнэ: Аавын, Азын, Алиахан, Ангирын!",
+                color: "from-rose-500 to-red-600",
+                bgTint: "bg-rose-50",
+                borderTint: "border-rose-200",
+                lines: [
+                    { emoji: "🐎", text: "Аавын мөнгөн хазаарын найман цэнгийн товруун дээр" },
+                    { emoji: "🎲", text: "Азын алаг мэлхийн наян нэгэн шагайн дээр" },
+                    { emoji: "🐴", text: "Алиахан саарлын унага хөллөн тэнцэх нуга дээр" },
+                    { emoji: "🦆", text: "Ангирын хоёр дэгдээхэй хөвөн цэнгэх нууран дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FFE4E6"/>
+                    <!-- Shagai Turtle grid representation -->
+                    <rect x="35" y="30" width="46" height="46" rx="10" fill="#FB7185" stroke="#BE123C" stroke-width="2"/>
+                    <circle cx="48" cy="43" r="4" fill="#FFF"/>
+                    <circle cx="68" cy="43" r="4" fill="#FFD900"/>
+                    <circle cx="48" cy="63" r="4" fill="#FFD900"/>
+                    <circle cx="68" cy="63" r="4" fill="#FFF"/>
+                    <!-- Two Ducklings / Angir -->
+                    <g transform="translate(115, 42)">
+                        <ellipse cx="22" cy="26" rx="14" ry="9" fill="#F97316"/>
+                        <circle cx="32" cy="15" r="7" fill="#F97316"/>
+                        <polygon points="38,14 45,16 38,18" fill="#FACC15"/>
+                        <path d="M5,35 Q25,30 45,35" stroke="#0284C7" stroke-width="3" fill="none"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 6,
+                theme: "Гал голомт ба Өвлийн мөсөн гол",
+                letters: "И - И - И - И",
+                tip: "4 мөр дөрвүүлээ 'И' үсгээр эхэлнэ: Индэр, Ижил, Идэр, Илд!",
+                color: "from-orange-500 to-red-600",
+                bgTint: "bg-orange-50",
+                borderTint: "border-orange-200",
+                lines: [
+                    { emoji: "🔥", text: "Индэр улаан галын цац бадман дөлөн дээр" },
+                    { emoji: "🐎", text: "Ижил хоёр загалын цацаг шанхан дэлэн дээр" },
+                    { emoji: "❄️", text: "Идэр гурван есийн цас чахрах цайдам дээр" },
+                    { emoji: "🧊", text: "Илд мөсөн голын цан хөөрөх гарман дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FFEDD5"/>
+                    <!-- Flame -->
+                    <path d="M65,85 C40,70 50,40 65,22 C72,38 85,42 80,60 C88,52 92,65 82,85 Z" fill="#EF4444"/>
+                    <path d="M65,85 C53,75 58,55 66,44 C73,55 77,70 65,85 Z" fill="#FACC15"/>
+                    <!-- Snowflakes -->
+                    <g stroke="#0284C7" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="140" y1="30" x2="140" y2="60"/>
+                        <line x1="125" y1="45" x2="155" y2="45"/>
+                        <line x1="130" y1="35" x2="150" y2="55"/>
+                        <line x1="150" y1="35" x2="130" y2="55"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 7,
+                theme: "Цэнхэр хадаг ба Мөнгөн сар",
+                letters: "Б - Б - Б - Б",
+                tip: "4 мөр дөрвүүлээ 'Б' үсгээр эхэлнэ: Бэлгийн, Бэхэн, Бэрийн, Бидэрт!",
+                color: "from-blue-500 to-cyan-600",
+                bgTint: "bg-blue-50",
+                borderTint: "border-blue-200",
+                lines: [
+                    { emoji: "🧣", text: "Бэлгийн цэнхэр хадагны хоёр гардах дэлгээс дээр" },
+                    { emoji: "👧", text: "Бэхэн хар гэзэгний хосоор дарах сүлжээс дээр" },
+                    { emoji: "🌸", text: "Бэрийн домогт цэцгийн хорвоо уярах дэлбээн дээр" },
+                    { emoji: "🌕", text: "Бидэрт мөнгөн сарны хоймор унах туян дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#DBEAFE"/>
+                    <!-- Blue Khadag -->
+                    <path d="M30,45 Q65,30 100,45 T170,45 L170,70 Q135,55 100,70 T30,70 Z" fill="#0066B3"/>
+                    <!-- Full Moon -->
+                    <circle cx="155" cy="26" r="14" fill="#FEF08A" stroke="#FACC15" stroke-width="2"/>
+                    <!-- Flower -->
+                    <circle cx="55" cy="30" r="6" fill="#F43F5E"/>
+                    <circle cx="55" cy="30" r="2.5" fill="#FACC15"/>
+                </svg>`
+            },
+            {
+                id: 8,
+                theme: "Ус, Мод, Хайр ба Шинэ хүн",
+                letters: "У - У - У - У",
+                tip: "4 мөр дөрвүүлээ 'У' үсгээр эхэлнэ: Урсгал, Ургамал, Уяран, Уйлан!",
+                color: "from-teal-500 to-emerald-600",
+                bgTint: "bg-teal-50",
+                borderTint: "border-teal-200",
+                lines: [
+                    { emoji: "💧", text: "Урсгал татмал усны хөл алдах ёроол дээр" },
+                    { emoji: "🌳", text: "Ургамал таримал модны хөрсөнд хавах ёзоор дээр" },
+                    { emoji: "💖", text: "Уяран мэлмэрэх янагийн дурлал амилах харцан дээр" },
+                    { emoji: "👶", text: "Уйлан мэндлэх үрийн дуулан орхих манцуйн дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#CCFBF1"/>
+                    <!-- Tree -->
+                    <rect x="52" y="62" width="10" height="28" fill="#78350F"/>
+                    <circle cx="57" cy="48" r="20" fill="#10B981"/>
+                    <circle cx="44" cy="54" r="13" fill="#059669"/>
+                    <circle cx="70" cy="54" r="13" fill="#059669"/>
+                    <!-- Heart -->
+                    <path d="M135,68 C135,68 112,52 112,38 A11,11 0 0,1 135,34 A11,11 0 0,1 158,38 C158,52 135,68 135,68 Z" fill="#F43F5E"/>
+                </svg>`
+            },
+            {
+                id: 9,
+                theme: "Хүлэг морь ба Өрх гэр",
+                letters: "А - А - А - А",
+                tip: "4 мөр дөрвүүлээ 'А' үсгээр эхэлнэ: Ажнай, Аагисан, Амар, Алтан!",
+                color: "from-amber-500 to-yellow-600",
+                bgTint: "bg-amber-50",
+                borderTint: "border-amber-200",
+                lines: [
+                    { emoji: "🏇", text: "Ажнай сайхан хүлгийн гал цахилах тууран дээр" },
+                    { emoji: "⚒️", text: "Аагисан улаан хүдрийн ган царцах хайлш дээр" },
+                    { emoji: "👨‍👩‍👧‍👦", text: "Амар түвшин жаргалтай ам бүлийн дансан дээр" },
+                    { emoji: "🚪", text: "Алтан босго өлзийтэй айл бүхний үүдэн дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FEF9C3"/>
+                    <!-- Golden Threshold / Door -->
+                    <rect x="75" y="22" width="50" height="68" rx="4" fill="#DA2032" stroke="#B45309" stroke-width="3"/>
+                    <rect x="70" y="88" width="60" height="8" rx="2" fill="#F59E0B"/>
+                    <circle cx="100" cy="52" r="10" fill="#FFD900"/>
+                    <!-- Sparkles -->
+                    <text x="35" y="55" font-size="22">✨</text>
+                    <text x="145" y="55" font-size="22">✨</text>
+                </svg>`
+            },
+            {
+                id: 10,
+                theme: "Баяр найр ба Алтан тариа",
+                letters: "Б - Б - Б - Б",
+                tip: "4 мөр дөрвүүлээ 'Б' үсгээр эхэлнэ: Баяр, Баян, Балтаар, Багц!",
+                color: "from-lime-500 to-green-600",
+                bgTint: "bg-lime-50",
+                borderTint: "border-lime-200",
+                lines: [
+                    { emoji: "🍲", text: "Баяр найрын ширээний амтат тансаг идээн дээр" },
+                    { emoji: "🌲", text: "Баян хангайд мөнхөрсөн арц хуш зээгэн дээр" },
+                    { emoji: "🌾", text: "Балтаар давтан хийсэн анжисны торгон ирэн дээр" },
+                    { emoji: "🌻", text: "Багц дүүрэн ургасан атрын тарианы мөрөн дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#ECFCCB"/>
+                    <!-- Pine Trees -->
+                    <polygon points="45,25 25,65 65,65" fill="#15803D"/>
+                    <polygon points="45,45 20,85 70,85" fill="#166534"/>
+                    <rect x="41" y="85" width="8" height="12" fill="#78350F"/>
+                    <!-- Golden Wheat Stalks -->
+                    <g stroke="#D97706" stroke-width="3" fill="#FACC15">
+                        <line x1="130" y1="92" x2="130" y2="30"/>
+                        <ellipse cx="124" cy="40" rx="4" ry="7" transform="rotate(-30 124 40)"/>
+                        <ellipse cx="136" cy="40" rx="4" ry="7" transform="rotate(30 136 40)"/>
+                        <ellipse cx="124" cy="56" rx="4" ry="7" transform="rotate(-30 124 56)"/>
+                        <ellipse cx="136" cy="56" rx="4" ry="7" transform="rotate(30 136 56)"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 11,
+                theme: "Дархан хил ба Эрдэнэ зуу",
+                letters: "Э - Э - Э - Э",
+                tip: "4 мөр дөрвүүлээ 'Э' үсгээр эхэлнэ: Эрт, Энхтайвны, Эрдэнэ, Энэ!",
+                color: "from-indigo-500 to-blue-700",
+                bgTint: "bg-indigo-50",
+                borderTint: "border-indigo-200",
+                lines: [
+                    { emoji: "🛡️", text: "Эрт айлын хаяа дархан хилийн дээсэн дээр" },
+                    { emoji: "💂", text: "Энхтайвны харуул дайчин эрсийн тангараг дээр" },
+                    { emoji: "🛕", text: "Эрдэнэ зуугийн хэрэмний зуун найман суварга дээр" },
+                    { emoji: "🏢", text: "Энэ зууны өргөөний зуун түмэн цонхон дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#E0E7FF"/>
+                    <!-- Stupas (Суварга) -->
+                    <g fill="#FFFFFF" stroke="#4F46E5" stroke-width="2">
+                        <rect x="35" y="70" width="34" height="20"/>
+                        <path d="M40,70 Q52,45 64,70 Z"/>
+                        <polygon points="52,25 46,48 58,48" fill="#FACC15"/>
+                        
+                        <rect x="85" y="70" width="34" height="20"/>
+                        <path d="M90,70 Q102,45 114,70 Z"/>
+                        <polygon points="102,25 96,48 108,48" fill="#FACC15"/>
+
+                        <rect x="135" y="70" width="34" height="20"/>
+                        <path d="M140,70 Q152,45 164,70 Z"/>
+                        <polygon points="152,25 146,48 158,48" fill="#FACC15"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 12,
+                theme: "Үндсэн хууль ба Алтан Соёмбо",
+                letters: "Э - Э - Э - Э",
+                tip: "Бас нэг 'Э' үсгийн бадаг: Эрх чөлөө, Эрх хэл, Эрдэнэтийн соёмбо, Эх нутгийн шороо!",
+                color: "from-red-500 to-rose-700",
+                bgTint: "bg-red-50",
+                borderTint: "border-red-200",
+                lines: [
+                    { emoji: "📜", text: "Эрх чөлөөний зарлиг ардын үндсэн хууль дээр" },
+                    { emoji: "📚", text: "Эрх хэл соёлынхоо ад биш баян сан дээр" },
+                    { emoji: "🔱", text: "Эрдэнэтийн арга билиг алтан соёмбын гачил дээр" },
+                    { emoji: "🌍", text: "Эх нутгийн шорооны амиар солих ширхэг дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FEE2E2"/>
+                    <!-- Constitution Book -->
+                    <rect x="42" y="26" width="48" height="60" rx="6" fill="#DA2032" stroke="#991B1B" stroke-width="2"/>
+                    <circle cx="66" cy="56" r="10" fill="#FFD900"/>
+                    <!-- Soyombo Circle -->
+                    <circle cx="138" cy="56" r="26" fill="#0066B3" stroke="#FFD900" stroke-width="3"/>
+                    <circle cx="138" cy="56" r="10" fill="#FFD900"/>
+                </svg>`
+            },
+            {
+                id: 13,
+                theme: "Аав ээж ба Ялалтын туг",
+                letters: "А - А - А - А",
+                tip: "4 мөр дөрвүүлээ 'А' үсгээр эхэлнэ: Аав ээжийн, Амин, Ардын, Амьсгалаа!",
+                color: "from-sky-500 to-indigo-600",
+                bgTint: "bg-sky-50",
+                borderTint: "border-sky-200",
+                lines: [
+                    { emoji: "🏡", text: "Аав ээжийн буянтай өлзийт цагаан хоймор дээр" },
+                    { emoji: "👶", text: "Амин гарвалын толботой өлгийт нялхсын өөжин дээр" },
+                    { emoji: "🚩", text: "Ардын журамт цэргийн өргөж ялсан туг дээр" },
+                    { emoji: "🎖️", text: "Амьсгалаа бидэнд өгсөн өрлөг дээдсийн дурсгал дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#E0F2FE"/>
+                    <!-- Victory Flag -->
+                    <line x1="65" y1="20" x2="65" y2="92" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M67,24 Q105,18 140,28 L140,56 Q105,46 67,52 Z" fill="#DA2032"/>
+                    <circle cx="88" cy="38" r="6" fill="#FFD900"/>
+                </svg>`
+            },
+            {
+                id: 14,
+                theme: "Үйлдвэр уурхай ба Бахархал",
+                letters: "Х - Х - Х - Х",
+                tip: "4 мөр дөрвүүлээ 'Х' үсгээр эхэлнэ: Хан, Хаяа, Хангай, Халуун!",
+                color: "from-cyan-500 to-blue-600",
+                bgTint: "bg-cyan-50",
+                borderTint: "border-cyan-200",
+                lines: [
+                    { emoji: "🏭", text: "Хан тэнгэрт сүмбэрлэсэн үйлдвэр уурхайн яндан дээр" },
+                    { emoji: "🏰", text: "Хаяа нийлж сүндэрлэсэн үлгэрийн харшийн туурган дээр" },
+                    { emoji: "💎", text: "Хангай говь талын үлэмжийн өв баялаг дээр" },
+                    { emoji: "❤️", text: "Халуун эх оронч бүхний үндэсний их бахархал дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#CFFAFE"/>
+                    <!-- City & Towers -->
+                    <rect x="40" y="45" width="26" height="45" fill="#0284C7" rx="3"/>
+                    <rect x="74" y="30" width="32" height="60" fill="#0369A1" rx="3"/>
+                    <rect x="114" y="50" width="28" height="40" fill="#0EA5E9" rx="3"/>
+                    <!-- Windows -->
+                    <rect x="82" y="40" width="6" height="6" fill="#FEF08A"/>
+                    <rect x="92" y="40" width="6" height="6" fill="#FEF08A"/>
+                    <rect x="82" y="54" width="6" height="6" fill="#FEF08A"/>
+                    <rect x="92" y="54" width="6" height="6" fill="#FEF08A"/>
+                    <!-- Gem -->
+                    <polygon points="165,45 178,58 165,75 152,58" fill="#F43F5E"/>
+                </svg>`
+            },
+            {
+                id: 15,
+                theme: "Сааль сүү ба Сая сүрэг",
+                letters: "С - С - С - С",
+                tip: "4 мөр дөрвүүлээ 'С' үсгээр эхэлнэ: Сав, Сая, Сар, Сайхан!",
+                color: "from-emerald-500 to-green-600",
+                bgTint: "bg-emerald-50",
+                borderTint: "border-emerald-200",
+                lines: [
+                    { emoji: "🥛", text: "Сав саваар саалийн харваж хүрэхгүй зэлэн дээр" },
+                    { emoji: "🐑", text: "Сая саяар сүргийн хатирч хүрэхгүй бэлчээр дээр" },
+                    { emoji: "🌞", text: "Сар нарны өртөөнд хагацаж болшгүй учрал дээр" },
+                    { emoji: "💚", text: "Сайхан монгол орноо хайрлаж ханашгүй ерөөл дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#D1FAE5"/>
+                    <!-- Green Steppe -->
+                    <path d="M0,75 Q100,55 200,75 L200,110 L0,110 Z" fill="#10B981"/>
+                    <!-- Fluffy Sheep -->
+                    <g transform="translate(55, 52)">
+                        <circle cx="15" cy="15" r="10" fill="#FFFFFF"/>
+                        <circle cx="25" cy="12" r="11" fill="#FFFFFF"/>
+                        <circle cx="35" cy="15" r="10" fill="#FFFFFF"/>
+                        <circle cx="42" cy="14" r="6" fill="#1E293B"/>
+                    </g>
+                    <g transform="translate(115, 58)">
+                        <circle cx="12" cy="12" r="8" fill="#FFFFFF"/>
+                        <circle cx="20" cy="10" r="9" fill="#FFFFFF"/>
+                        <circle cx="28" cy="12" r="8" fill="#FFFFFF"/>
+                        <circle cx="34" cy="11" r="5" fill="#1E293B"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 16,
+                theme: "Өглөөний нар ба Морин хуур",
+                letters: "Ө - Ө - Ө - Ө",
+                tip: "4 мөр дөрвүүлээ 'Ө' үсгээр эхэлнэ: Өглөө, Өвгийн, Өргөн, Өөрийн!",
+                color: "from-amber-500 to-orange-500",
+                bgTint: "bg-amber-50",
+                borderTint: "border-amber-200",
+                lines: [
+                    { emoji: "🌅", text: "Өглөө бүрийн нарны асгаран буух цацрал дээр" },
+                    { emoji: "🎻", text: "Өвгийн морин хуурын аялгуу хослох утсан дээр" },
+                    { emoji: "🌬️", text: "Өргөн цээж чөлөөтэй амьсгалж яваа газар дээр" },
+                    { emoji: "👑", text: "Өөрийн толгой мэдэлтэй амьдарч яваа заяан дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FEF3C7"/>
+                    <!-- Rising Sun -->
+                    <circle cx="65" cy="65" r="24" fill="#F59E0B"/>
+                    <path d="M0,75 L200,75 L200,110 L0,110 Z" fill="#FBBF24"/>
+                    <!-- Morin Khuur -->
+                    <g transform="translate(125, 18)">
+                        <rect x="6" y="42" width="22" height="28" rx="3" fill="#B45309" stroke="#78350F" stroke-width="2"/>
+                        <rect x="14" y="12" width="6" height="30" fill="#78350F"/>
+                        <circle cx="17" cy="10" r="5" fill="#B45309"/>
+                        <line x1="16" y1="14" x2="16" y2="66" stroke="#FEF08A" stroke-width="1"/>
+                        <line x1="18" y1="14" x2="18" y2="66" stroke="#FEF08A" stroke-width="1"/>
+                    </g>
+                </svg>`
+            },
+            {
+                id: 17,
+                theme: "Жанжин Сүхбаатар ба Улаанбаатар",
+                letters: "У - У - У - У",
+                tip: "4 мөр дөрвүүлээ 'У' үсгээр эхэлнэ: Ухаа, Ухаант, Улаанбаатар, Улсаа!",
+                color: "from-blue-600 to-indigo-700",
+                bgTint: "bg-blue-50",
+                borderTint: "border-blue-200",
+                lines: [
+                    { emoji: "🐎", text: "Ухаа хонгорын жолоог захлан татсан талбай дээр" },
+                    { emoji: "📣", text: "Ухаант жанжин Сүхбаатарын зарлан дуудсан тунхаг дээр" },
+                    { emoji: "🏙️", text: "Улаанбаатар нийслэлийн заяа тэтгэх дээвэр дээр" },
+                    { emoji: "🏛️", text: "Улсаа авлан захирсан засаг төрийнхөө ордон дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#DBEAFE"/>
+                    <!-- Government Palace -->
+                    <rect x="35" y="45" width="130" height="45" fill="#E2E8F0" stroke="#475569" stroke-width="2"/>
+                    <rect x="75" y="35" width="50" height="55" fill="#CBD5E1" stroke="#475569" stroke-width="2"/>
+                    <polygon points="70,35 100,20 130,35" fill="#0066B3"/>
+                    <!-- Pillars -->
+                    <line x1="84" y1="45" x2="84" y2="88" stroke="#64748B" stroke-width="3"/>
+                    <line x1="94" y1="45" x2="94" y2="88" stroke="#64748B" stroke-width="3"/>
+                    <line x1="106" y1="45" x2="106" y2="88" stroke="#64748B" stroke-width="3"/>
+                    <line x1="116" y1="45" x2="116" y2="88" stroke="#64748B" stroke-width="3"/>
+                </svg>`
+            },
+            {
+                id: 18,
+                theme: "Монгол эцэг эх ба НҮБ-ын далбаа",
+                letters: "Н - Н - Н - Н",
+                tip: "4 мөр дөрвүүлээ 'Н' үсгээр эхэлнэ: Нүүрэнд, Нүнжигэнд, Нүүдлийн, НҮБ-ын!",
+                color: "from-red-600 to-blue-700",
+                bgTint: "bg-indigo-50",
+                borderTint: "border-indigo-200",
+                lines: [
+                    { emoji: "👨", text: "Нүүрэнд нь гал бадарсан монгол эцгийн хийморь дээр" },
+                    { emoji: "👩", text: "Нүнжигэнд нь нар гэрэлтсэн монгол эхийн сэтгэл дээр" },
+                    { emoji: "🤝", text: "Нүүдлийн өргөөнд нэгдсэн монгол аймгийн холбоон дээр" },
+                    { emoji: "🇺🇳", text: "НҮБ-ын шилтгээнд заларсан монгол улсын далбаа дээр" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#E0E7FF"/>
+                    <!-- Mongolian Flag -->
+                    <line x1="65" y1="18" x2="65" y2="92" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+                    <rect x="67" y="22" width="24" height="44" fill="#DA2032"/>
+                    <rect x="91" y="22" width="24" height="44" fill="#0066B3"/>
+                    <rect x="115" y="22" width="24" height="44" fill="#DA2032"/>
+                    <circle cx="79" cy="44" r="5" fill="#FFD900"/>
+                </svg>`
+            },
+            {
+                id: 19,
+                theme: "Төгсгөлийн бадаг: Иргэн бүхний гараар!",
+                letters: "Э - Э - Э - Э",
+                tip: "Сүүлчийн бадаг! 4 мөр дөрвүүлээ 'Э' үсгээр эхэлнэ: Эзэн, Эх орон, Эрдэнэсийн, Эрх жаргалаа!",
+                color: "from-amber-500 via-red-500 to-blue-600",
+                bgTint: "bg-amber-50",
+                borderTint: "border-amber-300",
+                lines: [
+                    { emoji: "🙏", text: "Эзэн сууж жаргасан их заяагаа сүсэглэж" },
+                    { emoji: "🌅", text: "Эх орон талынхаа ирээдүйн таалалд нийцүүлж" },
+                    { emoji: "💎", text: "Эрдэнэсийн далайгаас шүүрдсэн итгэлийн сувд үгсээр" },
+                    { emoji: "🙌", text: "Эрх жаргалаа баталсан иргэн бүхний гараар" }
+                ],
+                svg: `<svg viewBox="0 0 200 110" class="w-full h-28">
+                    <rect width="200" height="110" rx="16" fill="#FEF3C7"/>
+                    <circle cx="100" cy="55" r="34" fill="#FFD900" opacity="0.4"/>
+                    <circle cx="100" cy="55" r="24" fill="#0066B3"/>
+                    <text x="100" y="63" font-size="24" text-anchor="middle" fill="#FFD900">🇲🇳</text>
+                    <text x="45" y="45" font-size="20">⭐</text>
+                    <text x="142" y="45" font-size="20">⭐</text>
+                    <text x="45" y="80" font-size="20">🎉</text>
+                    <text x="142" y="80" font-size="20">🎉</text>
+                </svg>`
+            }
+        ];
+
+        // Application State
+        let state = {
+            currentMode: 'read', // 'read', 'fill', 'hints'
+            layout: 'flashcard', // 'flashcard', 'grid'
+            currentIndex: 0, // 0 to 18
+            memorized: JSON.parse(localStorage.getItem('tusgaar_togtnol_memorized') || '[]'),
+            revealedWords: {}, // tracks revealed words in 'fill' or 'hints' mode
+            timings: JSON.parse(localStorage.getItem('tusgaar_togtnol_timings') || 'null') || JSON.parse(JSON.stringify(defaultTimestamps)),
+            playingStanzaId: null, // ID of currently playing stanza (1..19), or null
+            playMode: 'single', // 'single' | 'continuous'
+            loopSingle: false,
+            showTimingEditor: false
+        };
+
+        // YouTube IFrame Player API Setup
+        let ytPlayer = null;
+        let ytReady = false;
+        let syncTimer = null;
+
+        function loadYouTubeAPI() {
+            if (window.YT && window.YT.Player) {
+                window.onYouTubeIframeAPIReady();
+                return;
+            }
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+
+        window.onYouTubeIframeAPIReady = function() {
+            ytPlayer = new YT.Player('yt-player', {
+                videoId: 'zen_zLogSME',
+                host: 'https://www.youtube.com',
+                playerVars: {
+                    rel: 0,
+                    modestbranding: 1,
+                    playsinline: 1,
+                    enablejsapi: 1,
+                    origin: window.location.origin && window.location.origin !== 'null' ? window.location.origin : 'https://www.youtube.com'
+                },
+                events: {
+                    onReady: () => {
+                        ytReady = true;
+                        startSyncLoop();
+                    },
+                    onStateChange: (event) => {
+                        if (event.data === YT.PlayerState.ENDED) {
+                            state.playingStanzaId = null;
+                            updateAudioUI();
+                            renderContent();
+                        } else if (event.data === YT.PlayerState.PLAYING) {
+                            // Unmute automatically if browser started muted
+                            if (typeof ytPlayer.isMuted === 'function' && ytPlayer.isMuted()) {
+                                ytPlayer.unMute();
+                            }
+                            if (typeof ytPlayer.setVolume === 'function') {
+                                ytPlayer.setVolume(100);
+                            }
+                        }
+                    },
+                    onError: (e) => {
+                        showToast('YouTube бичлэг ачаалахад алдаа гарлаа. Интернэтээ шалгана уу.', '⚠️');
+                    }
+                }
+            });
+        };
+
+        function formatSec(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Play a specific stanza (1..19)
+        function playStanzaAudio(stanzaId, isContinuous = false) {
+            const idx = stanzaId - 1;
+            const timing = state.timings[idx];
+            state.currentIndex = idx;
+            state.playingStanzaId = stanzaId;
+            state.playMode = isContinuous ? 'continuous' : 'single';
+
+            renderPills();
+            renderContent();
+            updateTimingEditorUI();
+            updateAudioUI();
+
+            if (ytReady && ytPlayer && typeof ytPlayer.seekTo === 'function') {
+                // Ensure audio is unmuted and full volume on user click
+                if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
+                if (typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(100);
+                
+                ytPlayer.seekTo(timing.start, true);
+                ytPlayer.playVideo();
+
+                // Check after 800ms if browser autoplay policy blocked playback
+                setTimeout(() => {
+                    if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+                        const st = ytPlayer.getPlayerState();
+                        // -1 = unstarted, 2 = paused, 5 = video cued
+                        if (st === -1 || st === 2 || st === 5) {
+                            showToast('Зүүн талын YouTube бичлэг дээр нэг удаа ▶️ дарж идэвхжүүлнэ үү!', '👆');
+                            const playerBox = document.getElementById('yt-player');
+                            if (playerBox && playerBox.parentElement) {
+                                playerBox.parentElement.classList.add('ring-4', 'ring-mongolRed');
+                                setTimeout(() => playerBox.parentElement.classList.remove('ring-4', 'ring-mongolRed'), 3000);
+                            }
+                        }
+                    }
+                }, 800);
+            } else {
+                showToast('YouTube тоглуулагч ачаалж байна, түр хүлээнэ үү...', '⏳');
+            }
+        }
+
+        // Play all stanzas continuously from current stanza
+        function playAllContinuous() {
+            state.loopSingle = false;
+            updateLoopButtonUI();
+            playStanzaAudio(state.currentIndex + 1, true);
+            showToast('Бүх бадгийг дараалан тоглуулж эхэллээ!', '▶️');
+        }
+
+        // Toggle single stanza loop mode
+        function toggleLoopCurrent() {
+            state.loopSingle = !state.loopSingle;
+            if (state.loopSingle) {
+                state.playMode = 'single';
+            }
+            updateLoopButtonUI();
+            showToast(state.loopSingle ? 'Нэг бадгийг давтан тоглуулах горим аслаа!' : 'Давтах горим унтарлаа.', '🔁');
+        }
+
+        function updateLoopButtonUI() {
+            const btn = document.getElementById('btn-loop-toggle');
+            const label = document.getElementById('loop-status-label');
+            if (state.loopSingle) {
+                btn.className = "px-4 py-2.5 rounded-2xl bg-amber-400 text-amber-950 font-extrabold text-xs sm:text-sm border border-amber-500 shadow-sm transition cursor-pointer flex items-center gap-1.5";
+                label.textContent = "Асаалттай";
+            } else {
+                btn.className = "px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 font-extrabold text-xs sm:text-sm border border-slate-200 transition cursor-pointer flex items-center gap-1.5";
+                label.textContent = "Унтраалттай";
+            }
+        }
+
+        function stopAudio() {
+            state.playingStanzaId = null;
+            if (ytReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+                ytPlayer.pauseVideo();
+            }
+            updateAudioUI();
+            renderContent();
+        }
+
+        function updateAudioUI() {
+            const statusEl = document.getElementById('player-status-text');
+            if (state.playingStanzaId) {
+                const t = state.timings[state.playingStanzaId - 1];
+                statusEl.innerHTML = `<span class="text-mongolRed font-extrabold">🔊 Одоо тоглож байна: Бадаг ${state.playingStanzaId}</span> (${formatSec(t.start)} - ${formatSec(t.end)})`;
+            } else {
+                statusEl.textContent = 'Бадаг дээрх "🔊 Сонсох" товчийг дарж тухайн бадгийг шууд сонсоорой!';
+            }
+        }
+
+        // Real-time playback monitoring loop
+        function startSyncLoop() {
+            if (syncTimer) clearInterval(syncTimer);
+            syncTimer = setInterval(() => {
+                if (!ytReady || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+                const playerState = ytPlayer.getPlayerState();
+                const currentTime = ytPlayer.getCurrentTime();
+                document.getElementById('yt-current-time').textContent = formatSec(currentTime);
+
+                if (playerState === YT.PlayerState.PLAYING && state.playingStanzaId !== null) {
+                    const idx = state.playingStanzaId - 1;
+                    const timing = state.timings[idx];
+
+                    if (state.playMode === 'single') {
+                        if (currentTime >= timing.end) {
+                            if (state.loopSingle) {
+                                ytPlayer.seekTo(timing.start, true);
+                            } else {
+                                ytPlayer.pauseVideo();
+                                state.playingStanzaId = null;
+                                updateAudioUI();
+                                renderContent();
+                                showToast(`Бадаг ${idx + 1} дууслаа! Дахин сонсох бол 🔁 дарна уу.`, '🎧');
+                            }
+                        }
+                    } else if (state.playMode === 'continuous') {
+                        // Auto-advance active stanza highlight as video plays
+                        const activeIdx = state.timings.findIndex(t => currentTime >= t.start && currentTime < t.end);
+                        if (activeIdx !== -1 && (activeIdx + 1) !== state.playingStanzaId) {
+                            state.playingStanzaId = activeIdx + 1;
+                            state.currentIndex = activeIdx;
+                            renderPills();
+                            renderContent();
+                            updateTimingEditorUI();
+                            updateAudioUI();
+                            if (state.layout === 'grid') {
+                                const cardEl = document.getElementById(`stanza-card-${state.playingStanzaId}`);
+                                if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                    }
+                }
+            }, 250);
+        }
+
+        // Timestamp Fine-Tuning Controls
+        function toggleTimingEditor() {
+            state.showTimingEditor = !state.showTimingEditor;
+            const panel = document.getElementById('timing-editor-panel');
+            if (state.showTimingEditor) {
+                panel.classList.remove('hidden');
+                updateTimingEditorUI();
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        function updateTimingEditorUI() {
+            const num = state.currentIndex + 1;
+            const t = state.timings[state.currentIndex];
+            document.getElementById('sync-stanza-num').textContent = num;
+            document.getElementById('sync-range-display').textContent = `${formatSec(t.start)} - ${formatSec(t.end)}`;
+        }
+
+        function adjustStanzaTime(bound, delta) {
+            const t = state.timings[state.currentIndex];
+            if (bound === 'start') {
+                t.start = Math.max(0, Math.min(t.end - 2, t.start + delta));
+            } else {
+                t.end = Math.min(471, Math.max(t.start + 2, t.end + delta));
+            }
+            localStorage.setItem('tusgaar_togtnol_timings', JSON.stringify(state.timings));
+            updateTimingEditorUI();
+            updateAudioUI();
+            renderContent();
+        }
+
+        function setStartToNow() {
+            if (!ytReady || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+            const now = Math.floor(ytPlayer.getCurrentTime());
+            const t = state.timings[state.currentIndex];
+            const duration = Math.max(15, t.end - t.start);
+            t.start = now;
+            t.end = Math.min(471, now + duration);
+            localStorage.setItem('tusgaar_togtnol_timings', JSON.stringify(state.timings));
+            updateTimingEditorUI();
+            updateAudioUI();
+            renderContent();
+            showToast(`Бадаг ${state.currentIndex + 1}-ийн эхлэлийг ${formatSec(now)} болгож хадгаллаа!`, '📍');
+        }
+
+        function resetTimings() {
+            state.timings = JSON.parse(JSON.stringify(defaultTimestamps));
+            localStorage.removeItem('tusgaar_togtnol_timings');
+            updateTimingEditorUI();
+            updateAudioUI();
+            renderContent();
+            showToast('Бүх бадгийн хугацааг анхны утгад орууллаа.', '🔄');
+        }
+
+        // Initialize App
+        function init() {
+            loadYouTubeAPI();
+            renderPills();
+            updateProgressUI();
+            updateTimingEditorUI();
+            renderContent();
+        }
+
+        // Save progress to localStorage
+        function saveMemorized() {
+            localStorage.setItem('tusgaar_togtnol_memorized', JSON.stringify(state.memorized));
+        }
+
+        // Toggle Memorized status for a stanza
+        function toggleMemorized(id) {
+            const idx = state.memorized.indexOf(id);
+            if (idx === -1) {
+                state.memorized.push(id);
+                showToast(`Бадаг ${id}-ийг цээжилсэн гэж тэмдэглэлээ! Мундаг байна!`, '⭐');
+                fireSmallConfetti();
+                if (state.memorized.length === 19) {
+                    setTimeout(() => {
+                        document.getElementById('celebration-modal').classList.remove('hidden');
+                        document.getElementById('celebration-modal').classList.add('flex');
+                        fireBigConfetti();
+                    }, 500);
+                }
+            } else {
+                state.memorized.splice(idx, 1);
+                showToast(`Бадаг ${id}-ийн тэмдэглэгээг болиуллаа.`, '🔄');
+            }
+            saveMemorized();
+            updateProgressUI();
+            renderPills();
+            renderContent();
+        }
+
+        // Reset all progress
+        function resetProgress() {
+            if (state.memorized.length === 0) return;
+            state.memorized = [];
+            saveMemorized();
+            updateProgressUI();
+            renderPills();
+            renderContent();
+            showToast('Бүх одны тэмдэглэгээг шинэчиллээ!', '🧹');
+        }
+
+        function closeCelebration() {
+            document.getElementById('celebration-modal').classList.add('hidden');
+            document.getElementById('celebration-modal').classList.remove('flex');
+        }
+
+        // Update Progress Bar & Encouragement Text
+        function updateProgressUI() {
+            const count = state.memorized.length;
+            const total = stanzasData.length;
+            const pct = Math.round((count / total) * 100);
+
+            document.getElementById('progress-text').textContent = `${count} / ${total} бадаг ⭐`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+
+            const msgEl = document.getElementById('encouragement-msg');
+            if (count === 0) msgEl.textContent = "Эхний бадгаа цээжилж эхэлцгээе! 🚀";
+            else if (count < 5) msgEl.textContent = "Сайн эхлэл! Урагшаа, чамд чадна! 💪";
+            else if (count < 10) msgEl.textContent = "Гайхалтай! Бараг талдаа орчихлоо! 🌟";
+            else if (count < 15) msgEl.textContent = "Чи үнэхээр хурдан цээжилж байна шүү! 🔥";
+            else if (count < 19) msgEl.textContent = "Тун бага үлдлээ! Ялалт ойрхон байна! 🏆";
+            else msgEl.textContent = "БҮХ 19 БАДГИЙГ ЦЭЭЖИЛЛЭЭ! БАЯР ХҮРГЭЕ! 🎉";
+        }
+
+        // Set Memorization Mode ('read', 'fill', 'hints')
+        function setMode(mode) {
+            state.currentMode = mode;
+            state.revealedWords = {}; // reset hidden words on mode switch
+
+            // Update button styles
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.className = "mode-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-blue-50";
+            });
+            const activeBtn = document.getElementById(`btn-mode-${mode}`);
+            activeBtn.className = "mode-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all cursor-pointer bg-mongolBlue text-white shadow-md ring-2 ring-blue-300";
+
+            // Update helper banner
+            const helperText = document.getElementById('mode-helper-text');
+            const revealBtn = document.getElementById('reveal-all-btn');
+
+            if (mode === 'read') {
+                helperText.textContent = "Бадаг бүрийн эхний том өнгөт үсгүүд болон зургийг ажиглан чанга дуугаар уншаарай!";
+                revealBtn.classList.add('hidden');
+            } else if (mode === 'fill') {
+                helperText.textContent = "Цэнхэр нүдэн дээр дарж нуугдсан түлхүүр үгсийг зөв таасан эсэхээ шалгаарай!";
+                revealBtn.classList.remove('hidden');
+            } else if (mode === 'hints') {
+                helperText.textContent = "Зөвхөн эхний 2 үгийг хараад үлдсэн мөрийг цээжээр уншаарай. Шалгах бол цэнхэр хэсэгт дарна уу!";
+                revealBtn.classList.remove('hidden');
+            }
+
+            renderContent();
+        }
+
+        // Set Layout ('flashcard' or 'grid')
+        function setLayout(layout) {
+            state.layout = layout;
+            const btnFlash = document.getElementById('btn-layout-flashcard');
+            const btnGrid = document.getElementById('btn-layout-grid');
+            const viewFlash = document.getElementById('flashcard-view');
+            const viewGrid = document.getElementById('grid-view');
+
+            if (layout === 'flashcard') {
+                btnFlash.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer bg-white text-mongolBlue shadow-sm";
+                btnGrid.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                viewFlash.classList.remove('hidden');
+                viewGrid.classList.add('hidden');
+            } else {
+                btnGrid.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer bg-white text-mongolBlue shadow-sm";
+                btnFlash.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                viewGrid.classList.remove('hidden');
+                viewFlash.classList.add('hidden');
+            }
+            renderContent();
+        }
+
+        // Render Quick Selector Pills (1..19)
+        function renderPills() {
+            const container = document.getElementById('stanza-pills');
+            container.innerHTML = stanzasData.map((stanza, index) => {
+                const isMemorized = state.memorized.includes(stanza.id);
+                const isSelected = state.layout === 'flashcard' && state.currentIndex === index;
+                const firstLetter = stanza.letters.charAt(0);
+
+                let baseClass = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center gap-1 border ";
+                if (isSelected) {
+                    baseClass += "bg-mongolBlue text-white border-mongolBlue shadow-md scale-105";
+                } else if (isMemorized) {
+                    baseClass += "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200";
+                } else {
+                    baseClass += "bg-slate-50 text-slate-700 border-slate-200 hover:bg-blue-50";
+                }
+
+                return `
+                    <button onclick="selectStanza(${index})" class="${baseClass}">
+                        <span>${stanza.id}.</span>
+                        <span class="opacity-80">(${firstLetter})</span>
+                        ${isMemorized ? '<span>⭐</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Select a specific stanza
+        function selectStanza(index) {
+            state.currentIndex = index;
+            updateTimingEditorUI();
+            if (state.layout === 'grid') {
+                setLayout('flashcard');
+            } else {
+                renderPills();
+                renderContent();
+            }
+        }
+
+        function prevStanza() {
+            if (state.currentIndex > 0) {
+                state.currentIndex--;
+                updateTimingEditorUI();
+                renderPills();
+                renderContent();
+            }
+        }
+
+        function nextStanza() {
+            if (state.currentIndex < stanzasData.length - 1) {
+                state.currentIndex++;
+                updateTimingEditorUI();
+                renderPills();
+                renderContent();
+            }
+        }
+
+        // Reveal/Hide a specific word token
+        function toggleWord(key) {
+            state.revealedWords[key] = !state.revealedWords[key];
+            const el = document.getElementById(`word-${key}`);
+            if (el) {
+                if (state.revealedWords[key]) {
+                    el.classList.remove('hidden-state');
+                    el.classList.add('revealed-state');
+                } else {
+                    el.classList.remove('revealed-state');
+                    el.classList.add('hidden-state');
+                }
+            }
+        }
+
+        // Toggle all hidden words on screen
+        function toggleRevealAllInCurrent() {
+            const hiddenEls = document.querySelectorAll('.secret-word.hidden-state');
+            if (hiddenEls.length > 0) {
+                hiddenEls.forEach(el => {
+                    const key = el.dataset.key;
+                    state.revealedWords[key] = true;
+                    el.classList.remove('hidden-state');
+                    el.classList.add('revealed-state');
+                });
+            } else {
+                document.querySelectorAll('.secret-word').forEach(el => {
+                    const key = el.dataset.key;
+                    state.revealedWords[key] = false;
+                    el.classList.remove('revealed-state');
+                    el.classList.add('hidden-state');
+                });
+            }
+        }
+
+        // Format a single line according to the selected memorization mode
+        function formatPoemLine(stanzaId, lineIdx, text) {
+            const words = text.split(' ');
+            
+            // Highlight the very first letter of the line (Alliteration / Толгой холболт)
+            const formatFirstWord = (word) => {
+                const firstChar = word.charAt(0);
+                const rest = word.slice(1);
+                return `<span class="inline-flex items-center justify-center bg-mongolRed text-white font-black rounded-lg px-1.5 py-0.5 mr-0.5 shadow-sm text-base sm:text-lg">${firstChar}</span><span class="font-extrabold text-slate-900">${rest}</span>`;
+            };
+
+            if (state.currentMode === 'read') {
+                return `${formatFirstWord(words[0])} ${words.slice(1).join(' ')}`;
+            }
+
+            if (state.currentMode === 'fill') {
+                // Hide the last 2 words (usually the noun + "дээр" or key imagery word)
+                return words.map((w, wIdx) => {
+                    if (wIdx === 0) return formatFirstWord(w);
+                    // Hide key words (e.g. 3rd word and second-to-last word)
+                    if (wIdx === 2 || wIdx === words.length - 2) {
+                        const key = `${stanzaId}-${lineIdx}-${wIdx}`;
+                        const isRevealed = !!state.revealedWords[key];
+                        return `<span id="word-${key}" data-key="${key}" onclick="toggleWord('${key}')" class="secret-word relative inline-block px-2.5 py-0.5 mx-0.5 rounded-lg font-extrabold ${isRevealed ? 'revealed-state' : 'hidden-state'}">${w}</span>`;
+                    }
+                    return w;
+                }).join(' ');
+            }
+
+            if (state.currentMode === 'hints') {
+                // Show first 2 words, hide the rest as one clickable phrase block
+                const visiblePart = `${formatFirstWord(words[0])} <span class="font-bold text-slate-800">${words[1]}</span>`;
+                const hiddenPhrase = words.slice(2).join(' ');
+                const key = `${stanzaId}-${lineIdx}-rest`;
+                const isRevealed = !!state.revealedWords[key];
+                return `${visiblePart} <span id="word-${key}" data-key="${key}" onclick="toggleWord('${key}')" class="secret-word relative inline-block px-3 py-0.5 ml-1 rounded-xl font-bold ${isRevealed ? 'revealed-state' : 'hidden-state'}">${hiddenPhrase}</span>`;
+            }
+        }
+
+        // Build HTML for a single Stanza Card
+        function buildStanzaCardHTML(stanza) {
+            const isMemorized = state.memorized.includes(stanza.id);
+            const isPlaying = state.playingStanzaId === stanza.id;
+            const timing = state.timings[stanza.id - 1];
+
+            let cardRing = isMemorized ? 'border-amber-400 ring-2 ring-amber-200' : stanza.borderTint;
+            if (isPlaying) {
+                cardRing = 'border-mongolRed ring-4 ring-red-200 shadow-xl';
+            }
+
+            return `
+                <div id="stanza-card-${stanza.id}" class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all border-2 ${cardRing} overflow-hidden flex flex-col justify-between">
+                    <!-- Top Header Banner -->
+                    <div>
+                        <div class="bg-gradient-to-r ${stanza.color} px-5 py-3.5 text-white flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center font-display font-black text-lg border border-white/30">
+                                    ${stanza.id}
+                                </span>
+                                <div>
+                                    <h3 class="font-extrabold text-base sm:text-lg leading-tight">${stanza.theme}</h3>
+                                    <span class="text-xs font-bold text-white/90">Толгой үсэг: <strong class="bg-white/25 px-2 py-0.5 rounded-md">${stanza.letters}</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons: Listen & Memorized Star -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="playStanzaAudio(${stanza.id}, false)" class="px-3.5 py-2 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 ${isPlaying ? 'bg-mongolRed text-white ring-2 ring-white animate-pulse' : 'bg-white text-slate-900 hover:bg-amber-50'}" title="Энэ бадгийг сонсох (${formatSec(timing.start)} - ${formatSec(timing.end)})">
+                                    <span>${isPlaying ? '🔊 Уншиж байна...' : '🔊 Сонсох'}</span>
+                                    <span class="text-[11px] opacity-70 font-mono">(${formatSec(timing.start)})</span>
+                                </button>
+
+                                <button onclick="toggleMemorized(${stanza.id})" class="px-3.5 py-2 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 ${isMemorized ? 'bg-amber-300 text-amber-950 hover:bg-amber-400' : 'bg-white/20 hover:bg-white/30 text-white border border-white/40'}">
+                                    <span>${isMemorized ? '⭐ Цээжилсэн!' : '☆ Цээжилсэн'}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Visual SVG Illustration + Memory Tip -->
+                        <div class="p-4 ${stanza.bgTint} border-b ${stanza.borderTint}">
+                            <div class="rounded-2xl overflow-hidden shadow-inner bg-white border border-slate-200/60">
+                                ${stanza.svg}
+                            </div>
+                            <div class="mt-2.5 flex items-start gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-white/80 px-3 py-2 rounded-xl border border-slate-200/60">
+                                <span class="text-base shrink-0">🔑</span>
+                                <span>${stanza.tip}</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 Main Stanza Lines with Emojis -->
+                        <div class="p-5 sm:p-6 space-y-3.5">
+                            ${stanza.lines.map((line, idx) => `
+                                <div class="flex items-start gap-3 text-base sm:text-lg leading-relaxed font-semibold text-slate-800">
+                                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-lg shrink-0 shadow-xs border border-slate-200/70 select-none">
+                                        ${line.emoji}
+                                    </span>
+                                    <p class="pt-0.5">
+                                        ${formatPoemLine(stanza.id, idx, line.text)}
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Refrain (Дахилт мөрүүд) -->
+                    <div class="mx-5 mb-5 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-50 via-sky-50 to-amber-50 border border-blue-200/80 text-center">
+                        <p class="font-display font-bold text-mongolBlue text-base sm:text-lg leading-snug">
+                            🇲🇳 Тусгаар тогтнол чамайг<br>
+                            <span class="text-mongolRed">Тунхаглан бичнэ би!</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Main Render Dispatcher
+        function renderContent() {
+            if (state.layout === 'flashcard') {
+                const stanza = stanzasData[state.currentIndex];
+                document.getElementById('flashcard-container').innerHTML = buildStanzaCardHTML(stanza);
+                document.getElementById('flashcard-counter').textContent = `${state.currentIndex + 1} / ${stanzasData.length}`;
+                document.getElementById('prev-btn').disabled = state.currentIndex === 0;
+                document.getElementById('next-btn').disabled = state.currentIndex === stanzasData.length - 1;
+            } else {
+                const gridContainer = document.getElementById('grid-view');
+                gridContainer.innerHTML = stanzasData.map(stanza => buildStanzaCardHTML(stanza)).join('');
+            }
+        }
+
+        // Toast notification helper
+        let toastTimeout;
+        function showToast(msg, icon = '⭐') {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            
+            box.classList.remove('translate-y-24', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                box.classList.add('translate-y-24', 'opacity-0');
+            }, 2600);
+        }
+
+        // Lightweight Confetti Animation
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animId = null;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createParticles(count) {
+            const colors = ['#0066B3', '#DA2032', '#FFD900', '#10B981', '#F59E0B'];
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.4 - 50,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: Math.random() * 4 + 2,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            if (!animId) animateConfetti();
+        }
+
+        function fireSmallConfetti() { createParticles(35); }
+        function fireBigConfetti() { createParticles(150); }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.12; // gravity
+                p.rot += p.rotSpeed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rot * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                ctx.restore();
+
+                if (p.y > canvas.height + 20) {
+                    particles.splice(idx, 1);
+                }
+            });
+
+            if (particles.length > 0) {
+                animId = requestAnimationFrame(animateConfetti);
+            } else {
+                animId = null;
+            }
+        }
+
+        // Keyboard Arrow Support for Flashcard Mode
+        document.addEventListener('keydown', (e) => {
+            if (state.layout === 'flashcard') {
+                if (e.key === 'ArrowRight') nextStanza();
+                if (e.key === 'ArrowLeft') prevStanza();
+            }
+        });
+
+        // Start App
+        window.onload = init;
+    </script>
+</body>
+</html>
