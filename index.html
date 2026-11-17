@@ -364,14 +364,11 @@
     <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 shadow-2xl py-3 px-4">
         <div class="max-w-4xl mx-auto flex flex-col gap-2.5">
             
-            <!-- Row 1: Big Thumb-Friendly Audio Listen Button for Current Stanza -->
+            <!-- Row 1: Unified Play/Stop Toggle Button for Current Stanza (Loop by default) -->
             <div class="flex items-center justify-between gap-2">
-                <button onclick="playCurrentStanzaAudio()" id="bottom-listen-btn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-mongolRed to-rose-600 text-white font-extrabold text-base sm:text-lg shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2.5">
-                    <span class="text-2xl animate-bounce">🔊</span>
+                <button onclick="togglePlayCurrentStanza()" id="bottom-listen-btn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-mongolRed to-rose-600 text-white font-extrabold text-base sm:text-lg shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2.5">
+                    <span id="bottom-listen-icon" class="text-2xl animate-bounce">🔊</span>
                     <span id="bottom-listen-label">Одоогийн бадгийг сонсох (1-р бадаг)</span>
-                </button>
-                <button onclick="toggleLoopCurrent()" id="bottom-loop-btn" class="p-3.5 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 border border-slate-200 transition cursor-pointer shrink-0" title="Нэг бадгийг давтах">
-                    <span class="text-xl">🔁</span>
                 </button>
             </div>
 
@@ -829,6 +826,7 @@
             state.currentIndex = idx;
             state.playingStanzaId = stanzaId;
             state.playMode = isContinuous ? 'continuous' : 'single';
+            state.loopSingle = !isContinuous; // Default to loop when playing single stanza from bottom button
 
             renderPills();
             renderContent();
@@ -856,22 +854,51 @@
             }
         }
 
+        // Toggle Play / Stop for current stanza from bottom button
+        function togglePlayCurrentStanza() {
+            if (state.playingStanzaId === state.currentIndex + 1) {
+                // Already playing -> Stop it
+                stopAudio();
+            } else {
+                // Play current stanza with loop enabled by default
+                playStanzaAudio(state.currentIndex + 1, false);
+            }
+        }
+
         // Shortcut to play current active stanza from bottom thumb button
         function playCurrentStanzaAudio() {
-            playStanzaAudio(state.currentIndex + 1, false);
+            togglePlayCurrentStanza();
         }
 
         function updateBottomListenButton() {
             const labelEl = document.getElementById('bottom-listen-label');
+            const iconEl = document.getElementById('bottom-listen-icon');
+            const btnEl = document.getElementById('bottom-listen-btn');
+            
+            const isPlayingThis = state.playingStanzaId === (state.currentIndex + 1);
+
             if (labelEl) {
-                labelEl.textContent = `Одоогийн бадгийг сонсох (${state.currentIndex + 1}-р бадаг)`;
+                if (isPlayingThis) {
+                    labelEl.textContent = `🛑 Уншиж байна (Зогсоох)`;
+                } else {
+                    labelEl.textContent = `🔊 Сонсох: Бадаг ${state.currentIndex + 1} (Давтаж уншина)`;
+                }
+            }
+            if (iconEl) {
+                iconEl.textContent = isPlayingThis ? '⏹️' : '🔊';
+            }
+            if (btnEl) {
+                if (isPlayingThis) {
+                    btnEl.className = "w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-slate-700 to-slate-900 text-white font-extrabold text-base sm:text-lg shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2.5 animate-pulse";
+                } else {
+                    btnEl.className = "w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-mongolRed to-rose-600 text-white font-extrabold text-base sm:text-lg shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2.5";
+                }
             }
         }
 
         // Play all stanzas continuously from current stanza
         function playAllContinuous() {
             state.loopSingle = false;
-            updateLoopButtonUI();
             playStanzaAudio(state.currentIndex + 1, true);
             showToast('Бүх бадгийг дараалан тоглуулж эхэллээ!', '▶️');
         }
@@ -882,20 +909,7 @@
             if (state.loopSingle) {
                 state.playMode = 'single';
             }
-            updateLoopButtonUI();
             showToast(state.loopSingle ? 'Нэг бадгийг давтан тоглуулах горим аслаа!' : 'Давтах горим унтарлаа.', '🔁');
-        }
-
-        function updateLoopButtonUI() {
-            const btn = document.getElementById('btn-loop-toggle');
-            const label = document.getElementById('loop-status-label');
-            if (state.loopSingle) {
-                btn.className = "px-4 py-2.5 rounded-2xl bg-amber-400 text-amber-950 font-extrabold text-xs sm:text-sm border border-amber-500 shadow-sm transition cursor-pointer flex items-center gap-1.5";
-                label.textContent = "Асаалттай";
-            } else {
-                btn.className = "px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 font-extrabold text-xs sm:text-sm border border-slate-200 transition cursor-pointer flex items-center gap-1.5";
-                label.textContent = "Унтраалттай";
-            }
         }
 
         function stopAudio() {
@@ -904,6 +918,7 @@
                 ytPlayer.pauseVideo();
             }
             updateAudioUI();
+            updateBottomListenButton();
             renderContent();
         }
 
@@ -913,8 +928,9 @@
                 const t = state.timings[state.playingStanzaId - 1];
                 statusEl.innerHTML = `<span class="text-mongolRed font-extrabold">🔊 Одоо тоглож байна: Бадаг ${state.playingStanzaId}</span> (${formatSec(t.start)} - ${formatSec(t.end)})`;
             } else {
-                statusEl.textContent = 'Бадаг дээрх "🔊 Сонсох" товчийг дарж тухайн бадгийг шууд сонсоорой!';
+                statusEl.textContent = 'Доод талын улаан товчийг дарж тухайн бадгийг давтан сонсоорой!';
             }
+            updateBottomListenButton();
         }
 
         // Real-time playback monitoring loop
@@ -939,7 +955,6 @@
                                 state.playingStanzaId = null;
                                 updateAudioUI();
                                 renderContent();
-                                showToast(`Бадаг ${idx + 1} дууслаа! Дахин сонсох бол 🔁 дарна уу.`, '🎧');
                             }
                         }
                     } else if (state.playMode === 'continuous') {
